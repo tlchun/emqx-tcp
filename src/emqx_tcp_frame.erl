@@ -119,13 +119,13 @@ read_length_binary(<<Len:16, Rest/binary>> = Bin) ->
       {Content, Rest1}
   end.
 
-%%tcp连接数据包序列化
+%% tcp连接数据包序列化
 serialize(#tcp_packet_conn{client_id = ClientId, keepalive = Keepalive, username = Username, password = Password, version = Version}, _Opts) ->
 %%  负载区数据二进制编码
   Payload = <<Keepalive:8, (lbin(ClientId))/binary, (encode_username_and_passowrd(Username, Password))/binary>>,
 %%  长度编码
   LenOfPaylaod = byte_size(Payload),
-%%  构建二进制数据
+%%  构建二进制数据 4个byte的类型，4个byte的版本，16个byte的长度，8 byte Keepalive,ClientId,username,password
   <<1:4, Version:4, LenOfPaylaod:16, Payload/binary>>;
 %% 连接包回复
 serialize(#tcp_packet_connack{code = Code, msg = Msg}, _Opts) -> <<2:4, Code:4, (lbin(Msg))/binary>>;

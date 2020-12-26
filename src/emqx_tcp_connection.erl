@@ -82,6 +82,7 @@ init({Transport, RawSocket, Options}) ->
   end.
 %% 连接初始化
 do_init(Transport, Socket, Options) ->
+  io:format("emqx-tcp do_init.~n"),
   %%  获取远程套接口的名字，包括它的IP和端口，确保进程断开
   {ok, Peername} = Transport:ensure_ok_or_exit(peername, [Socket]),
   %%  获取本地套接口的名字，包括它的IP和端口，确保进程断开
@@ -123,6 +124,7 @@ do_init(Transport, Socket, Options) ->
 %% 发送数据包
 send(Packet, Opts, Transport, Socket) ->
 %%  序列话数据包
+  io:format("emqx-tcp send Packet.~n"),
   Data = emqx_tcp_frame:serialize(Packet, Opts),
 %%  异步发送
   case Transport:async_send(Socket, Data) of
