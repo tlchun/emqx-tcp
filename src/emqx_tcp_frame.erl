@@ -25,7 +25,7 @@ merge_opts(Options) ->
 parse(<<>>, {none, Options}) -> {ok, {none, Options}};
 %% 匹配4个字节的包类型
 parse(<<Type:4, Flags:4, Rest/binary>>, {none, Options}) ->
-  io:format("parse(Type=~p, Flags=~p)", [Type, Flags]),
+  io:format("parse(Type=~p, Flags=~p. ~n)", [Type, Flags]),
   parse_frame_type(Type, Flags, Rest, Options);
 parse(Bin, {more, {Type, Flags, Rest, Options}}) when is_binary(Bin) ->
   io:format("Bin parse(Type=~p, Flags=~p)", [Type, Flags]),
@@ -39,13 +39,18 @@ parse_frame_type(1, 1, Rest, Options) ->
     {ok, Rest1, [ConnPayload]} ->
 %%      解析连接数据包的负载
       case parse_conn_payload(ConnPayload) of
-        {error, Reason} -> {error, Reason};
+        {error, Reason} ->
+          io:format("parse_conn_payload eror ~n"),
+          {error, Reason};
 %%        匹配到{Keepalive，ClientId，Username，Password}
         {Keepalive, ClientId, Username, Password} ->
+          io:format("parse_conn_payload success ~p,~p,~p,~p,~n",[Keepalive,ClientId,Username,Password]),
           Pkt = #tcp_packet_conn{client_id = ClientId, keepalive = Keepalive, username = Username, password = Password, version = 1},
           {ok, Pkt, Rest1, {none, Options#{version => 1}}}
       end;
-    {more, Rest} -> {ok, {more, {1, 1, Rest, Options}}}
+    {more, Rest} ->
+      io:format("parse_conn_payload more ~n"),
+      {ok, {more, {1, 1, Rest, Options}}}
   end;
 
 %% 业务数据包 type = 1 连接包
