@@ -85,21 +85,18 @@ init({Transport, RawSocket, Options}) ->
   end.
 %% 连接初始化
 do_init(Transport, Socket, Options) ->
-  io:format("emqx-tcp do_init----1.~n"),
   %%  获取远程套接口的名字，包括它的IP和端口，确保进程断开
   {ok, Peername} = Transport:ensure_ok_or_exit(peername, [Socket]),
   %%  获取本地套接口的名字，包括它的IP和端口，确保进程断开
   {ok, Sockname} = Transport:ensure_ok_or_exit(sockname, [Socket]),
   %% 安全连接关闭
   Peercert = Transport:ensure_ok_or_exit(peercert, [Socket]),
-  io:format("emqx-tcp do_init-----2.~n"),
   %% 日志打印
   emqx_logger:set_metadata_peername(esockd:format(Peername)),
   %% 连接速率限制
   RateLimit = init_limiter(proplists:get_value(rate_limit, Options)),
   %% 读包配置
   ActiveN = proplists:get_value(active_n, Options, 100),
-  io:format("emqx-tcp do_init-----3.~n"),
   %% 连接信息封装
   ConnInfo = #{
     socktype => Transport:type(Socket), %% 连接类型
@@ -109,26 +106,22 @@ do_init(Transport, Socket, Options) ->
     sendfun => {fun emqx_tcp_connection:send/4, [Transport, Socket]}, conn_mod => emqx_tcp_connection},
   %% 进程状态
   PState = emqx_tcp_protocol:init(ConnInfo, Options),
-  io:format("emqx-tcp do_init-----4.~n"),
   %% 最大的数据
   MaxSize = proplists:get_value(max_packet_size, Options, 65535),
   %% 解析状态
   ParseState = emqx_tcp_frame:initial_parse_state(#{max_size => MaxSize}),
 
-  io:format("emqx-tcp do_init-----5.~n"),
   %% 开启统计
   EnableStats = proplists:get_value(enable_stats, Options, true),
   %% 空闲超时时间
   IdleTimout = proplists:get_value(idle_timeout, Options, 30000),
   %% 保存当前进程的状态
-  io:format("emqx-tcp do_init-----6.~n"),
 
   State = #state{transport = Transport, socket = Socket,
     peername = Peername, sockstate = running,
     active_n = ActiveN, rate_limit = RateLimit,
     pstate = PState, parse_state = ParseState,
     enable_stats = EnableStats, idle_timeout = IdleTimout},
-  io:format("emqx-tcp do_init-----7.~n"),
   gen_statem:enter_loop(emqx_tcp_connection, [{hibernate_after, 2 * IdleTimout}], idle, State, self(), [IdleTimout]).
 
 %% 发送数据包
@@ -215,27 +208,27 @@ handle(info, {Inet, _Sock, Data}, State = #state{pstate = PState}) when Inet == 
   process_incoming(Data, [], State#state{pstate = NPState});
 %% 处理socket连接错误
 handle(info, {Error, _Sock, Reason}, State) when Error == tcp_error; Error == ssl_error ->
-  io:format("handle info Error ~s ~s ~s .~n",[Error],[_Sock],[Reason]),
+  io:format("handle info Error .~n"),
   shutdown(Reason, State);
 %% 处理socket关闭错误
 handle(info, {Closed, _Sock}, State) when Closed == tcp_closed; Closed == ssl_closed ->
-  io:format("handle info Closed ~s .~n",[Closed]),
+  io:format("handle info Closed.~n"),
   shutdown(closed, State);
 %% 处理socket关闭错误
 handle(info, {Passive, _Sock}, State) when Passive == tcp_passive; Passive == ssl_passive ->
-  io:format("handle info Passive ~s ~s.~n",[Passive],[_Sock]),
+  io:format("handle info Passive.~n"),
   NState = ensure_rate_limit(State),
   ok = activate_socket(NState),
   {keep_state, NState};
 handle(info, activate_socket, State) ->
-  io:format("handle info activate_socket ~s.~n",[State]),
+  io:format("handle info activate_socket.~n"),
   ok = activate_socket(State#state{sockstate = running}),
   {keep_state, State#state{sockstate = running, limit_timer = undefined}};
 handle(info, {inet_reply, _Sock, ok}, State) ->
-  io:format("handle info inet_reply ~s.~n",[_Sock]),
+  io:format("handle info inet_reply.~n"),
   {keep_state, State};
 handle(info, {inet_reply, _Sock, {error, Reason}}, State) ->
-  io:format("handle info inet_reply Reason ~s ~s.~n",[_Sock],[Reason]),
+  io:format("handle info inet_reply Reason.~n"),
   shutdown(Reason, State);
 %% 超时错误
 handle(info, {timeout, Timer, emit_stats}, State = #state{stats_timer = Timer, pstate = PState}) ->
@@ -283,11 +276,11 @@ handle(info, {shutdown, conflict, {ClientId, NewPid}}, State) ->
   end,
   shutdown(conflict, State);
 handle(info, {shutdown, Reason}, State) ->
-  io:format("handle info shutdown ~s .~n",[Reason]),
+  io:format("handle info shutdown.~n"),
   shutdown(Reason, State);
 %% 未知异常处理
 handle(info, Info, State) ->
-  io:format("handle info shutdown ~s ~s.~n",[Info],[State]),
+  io:format("handle info shutdown.~n"),
   begin
     logger:log(error, #{},
       #{report_cb =>
@@ -359,7 +352,7 @@ process_incoming(Data, Packets, State = #state{parse_state = ParseState}) ->
     {error, Reason} -> shutdown(Reason, State)
   catch
     error:Reason:Stk ->
-      io:format("process error ~s ~s.~n",[Stk],[Reason]),
+      io:format("process error.~n"),
       begin
         logger:log(error, #{},
           #{report_cb =>
@@ -385,19 +378,19 @@ handle_incoming(Packet, SuccFun, State = #state{pstate = PState}) ->
   case emqx_tcp_protocol:received(Packet, PState) of
 %%    接收成功处理
     {ok, NPState} ->
-      io:format("handle_incoming emqx_tcp_protocol received ~s ~s.~n",[NPState]),
+      io:format("handle_incoming emqx_tcp_protocol received.~n"),
       SuccFun(State#state{pstate = NPState});
 %%   接收错误，关闭
     {error, Reason} ->
-      io:format("handle_incoming emqx_tcp_protocol error　Reason　 ~s.~n",[Reason]),
+      io:format("handle_incoming emqx_tcp_protocol error　Reason.~n"),
       shutdown(Reason, State);
 %%   接收错误，关闭
     {error, Reason, NPState} ->
-      io:format("handle_incoming emqx_tcp_protocol error　Reason　NPState　~s ~s.~n",[Reason],[NPState]),
+      io:format("handle_incoming emqx_tcp_protocol error　Reason　NPState.~n"),
       shutdown(Reason, State#state{pstate = NPState});
 %%   错误停止
     {stop, Error, NPState} ->
-      io:format("handle_incoming emqx_tcp_protocol stop　Error　NPState　~s ~s.~n",[Error],[NPState]),
+      io:format("handle_incoming emqx_tcp_protocol stop　Error　NPState.~n"),
       stop(Error, State#state{pstate = NPState})
   end.
 

@@ -33,6 +33,7 @@ parse(Bin, {more, {Type, Flags, Rest, Options}}) when is_binary(Bin) ->
 
 parse_frame_type(1, 1, Rest, Options) ->
 %%  从Rest去匹配数据，函数返回{more, Rest}或者{连接数据包和剩余数据包}
+  io_lib:format("parse_frame_type type = 1 ~n"),
   case run_read_funs([fun read_length_binary/1], Rest) of
 
     {ok, Rest1, [ConnPayload]} ->
@@ -53,7 +54,7 @@ parse_frame_type(1, Version, _Rest, _Options) ->
 
 %% 业务数据包 type = 4
 parse_frame_type(3, Flags, Rest, Options = #{max_size := MaxSize}) ->
-
+  io_lib:format("parse_frame_type type = 3 ~n"),
   case run_read_funs([fun read_length_binary/1], Rest) of
     {ok, Rest1, [Data]} ->
       case byte_size(Data) of
