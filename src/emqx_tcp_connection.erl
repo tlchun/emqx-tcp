@@ -121,15 +121,14 @@ do_init(Transport, Socket, Options) ->
   %% 空闲超时时间
   IdleTimout = proplists:get_value(idle_timeout, Options, 30000),
   %% 保存当前进程的状态
-  io:format("Start emqx-tcp MaxSize :~s ParseState ~s successfully.~n", [MaxSize, ParseState]),
-  io:format("Start emqx-tcp EnableStats :~s IdleTimout ~s successfully.~n", [EnableStats, IdleTimout]),
+  io:format("emqx-tcp do_init-----6.~n"),
 
   State = #state{transport = Transport, socket = Socket,
     peername = Peername, sockstate = running,
     active_n = ActiveN, rate_limit = RateLimit,
     pstate = PState, parse_state = ParseState,
     enable_stats = EnableStats, idle_timeout = IdleTimout},
-
+  io:format("emqx-tcp do_init-----7.~n"),
   gen_statem:enter_loop(emqx_tcp_connection, [{hibernate_after, 2 * IdleTimout}], idle, State, self(), [IdleTimout]).
 
 %% 发送数据包
