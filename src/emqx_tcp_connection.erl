@@ -85,19 +85,21 @@ init({Transport, RawSocket, Options}) ->
   end.
 %% 连接初始化
 do_init(Transport, Socket, Options) ->
-  io:format("emqx-tcp do_init.~n"),
+  io:format("emqx-tcp do_init----1.~n"),
   %%  获取远程套接口的名字，包括它的IP和端口，确保进程断开
   {ok, Peername} = Transport:ensure_ok_or_exit(peername, [Socket]),
   %%  获取本地套接口的名字，包括它的IP和端口，确保进程断开
   {ok, Sockname} = Transport:ensure_ok_or_exit(sockname, [Socket]),
   %% 安全连接关闭
   Peercert = Transport:ensure_ok_or_exit(peercert, [Socket]),
+  io:format("emqx-tcp do_init-----2.~n"),
   %% 日志打印
   emqx_logger:set_metadata_peername(esockd:format(Peername)),
   %% 连接速率限制
   RateLimit = init_limiter(proplists:get_value(rate_limit, Options)),
   %% 读包配置
   ActiveN = proplists:get_value(active_n, Options, 100),
+  io:format("emqx-tcp do_init-----3.~n"),
   %% 连接信息封装
   ConnInfo = #{
     socktype => Transport:type(Socket), %% 连接类型
@@ -107,10 +109,13 @@ do_init(Transport, Socket, Options) ->
     sendfun => {fun emqx_tcp_connection:send/4, [Transport, Socket]}, conn_mod => emqx_tcp_connection},
   %% 进程状态
   PState = emqx_tcp_protocol:init(ConnInfo, Options),
+  io:format("emqx-tcp do_init-----4.~n"),
   %% 最大的数据
   MaxSize = proplists:get_value(max_packet_size, Options, 65535),
   %% 解析状态
   ParseState = emqx_tcp_frame:initial_parse_state(#{max_size => MaxSize}),
+
+  io:format("emqx-tcp do_init-----5.~n"),
   %% 开启统计
   EnableStats = proplists:get_value(enable_stats, Options, true),
   %% 空闲超时时间
