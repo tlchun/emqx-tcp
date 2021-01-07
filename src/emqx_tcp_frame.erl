@@ -28,6 +28,7 @@ parse(<<Type:4, Flags:4, Rest/binary>>, {none, Options}) ->
   io_lib:format("parse(Type=~p, Flags=~p)", [Type, Flags]),
   parse_frame_type(Type, Flags, Rest, Options);
 parse(Bin, {more, {Type, Flags, Rest, Options}}) when is_binary(Bin) ->
+  io_lib:format("Bin parse(Type=~p, Flags=~p)", [Type, Flags]),
   parse_frame_type(Type, Flags, <<Rest/binary, Bin/binary>>, Options).
 
 parse_frame_type(1, 1, Rest, Options) ->
