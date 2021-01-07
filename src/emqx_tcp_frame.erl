@@ -84,15 +84,19 @@ parse_frame_type(Type, Flags, Rest, Options) ->
 
 %% 解析连接负载，读取客户 ClientId
 parse_conn_payload(<<K:8, L1:16, ClientId:L1/binary>>) ->
+  io:format("parse_conn_payload eror ~p,~p,~n",[K,ClientId]),
   {K, ClientId, undefined, undefined};
 %% 读取用户名
 parse_conn_payload(<<K:8, L1:16, ClientId:L1/binary, L2:16, Username:L2/binary>>) ->
+  io:format("parse_conn_payload eror ~p,~p,~p,~n",[K,ClientId,Username]),
   {K, ClientId, Username, undefined};
 %% 读取用户密码
 parse_conn_payload(<<K:8, L1:16, ClientId:L1/binary, L2:16, Username:L2/binary, L3:16, Password:L3/binary>>) ->
+  io:format("parse_conn_payload eror ~p,~p,~p,~p,~n",[K,ClientId,Username,Password]),
   {K, ClientId, Username, Password};
 %% 其他非法连接负载
 parse_conn_payload(_) ->
+  io:format("parse_conn_payload ~n"),
   {error, invalid_conn_payload_format}.
 
 %% socket读方法
