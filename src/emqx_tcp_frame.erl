@@ -117,15 +117,21 @@ run_read_funs([Fun | RFuns], Bin, Acc) ->
 %% 读数据长度
 -spec read_length_binary(binary()) -> {more, binary()} |{Content :: binary(), Rest :: binary()}.
 %% 小于2，返回有更多
-read_length_binary(Bin) when byte_size(Bin) < 2 -> {more, Bin};
+read_length_binary(Bin) when byte_size(Bin) < 2 ->
+  io:format("read_length_binary byte_size <2  ~n"),
+  {more, Bin};
 %% 从Bin 匹配2个字节的长度Len,其余的赋值给Rest
 read_length_binary(<<Len:16, Rest/binary>> = Bin) ->
 %%  如果Rest的长度等于 Len
+  io:format("read_length_binary byte_size(Rest) < Len  ~p ~n",[Len]),
   case byte_size(Rest) >= Len of
 %%    如果false，说明还有更多
-    false -> {more, Bin};
+    false ->
+      io:format("read_length_binary byte_size(Rest) < Len false ~n"),
+      {more, Bin};
 %%    如果刚好，就可以取出一个数据
     true ->
+      io:format("read_length_binary byte_size(Rest) >= Len true ~n"),
 %%      从Rest中匹配长度为Len的内容Content，剩余的赋值给Rest1
       <<Content:Len/binary, Rest1/binary>> = Rest,
 %%    返回配的内容和剩余的数值
