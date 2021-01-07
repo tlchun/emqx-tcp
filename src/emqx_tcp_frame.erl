@@ -25,6 +25,7 @@ merge_opts(Options) ->
 parse(<<>>, {none, Options}) -> {ok, {none, Options}};
 %% 匹配4个字节的包类型
 parse(<<Type:4, Flags:4, Rest/binary>>, {none, Options}) ->
+  io_lib:format("parse(Type=~s, Flags=~p)", [Type, Flags]),
   parse_frame_type(Type, Flags, Rest, Options);
 parse(Bin, {more, {Type, Flags, Rest, Options}}) when is_binary(Bin) ->
   parse_frame_type(Type, Flags, <<Rest/binary, Bin/binary>>, Options).
@@ -51,6 +52,7 @@ parse_frame_type(1, Version, _Rest, _Options) ->
 
 %% 业务数据包 type = 4
 parse_frame_type(3, Flags, Rest, Options = #{max_size := MaxSize}) ->
+
   case run_read_funs([fun read_length_binary/1], Rest) of
     {ok, Rest1, [Data]} ->
       case byte_size(Data) of
