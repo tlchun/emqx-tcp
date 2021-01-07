@@ -25,7 +25,7 @@ merge_opts(Options) ->
 parse(<<>>, {none, Options}) -> {ok, {none, Options}};
 %% 匹配4个字节的包类型
 parse(<<Type:4, Flags:4, Rest/binary>>, {none, Options}) ->
-  io_lib:format("parse(Type=~s, Flags=~p)", [Type, Flags]),
+  io_lib:format("parse(Type=~p, Flags=~p)", [Type, Flags]),
   parse_frame_type(Type, Flags, Rest, Options);
 parse(Bin, {more, {Type, Flags, Rest, Options}}) when is_binary(Bin) ->
   parse_frame_type(Type, Flags, <<Rest/binary, Bin/binary>>, Options).
